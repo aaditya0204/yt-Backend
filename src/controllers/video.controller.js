@@ -4,7 +4,7 @@ import { USER } from "../models/user.model.js";
 import { ApiError } from "../utils/apiError.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { uploadonCloudinary, uploadOnCloudinary } from "../utils/cloudinary.js";
 
 const getAllVideos = asyncHandler(async (req, res) => {
   const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query;
@@ -48,8 +48,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
         "Videos fetched successfully"
       )
     );
-});
-
+}); // Practice More THIS !!!
 
 const publishAVideo = asyncHandler(async (req, res) => {
   const { title, description } = req.body;
@@ -63,15 +62,26 @@ const publishAVideo = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Video file is required");
   }
 
-  const uploadResponse = await uploadOnCloudinary(videoLocalPath);
-  if (!uploadResponse?.secure_url) {
+  const thumbnailLocalPath = req.files?.thumbnail?.[0]?.path;
+  if (!thumbnailLocalPath) {
+    throw new ApiError(400, "Thumbnail is required");
+  }
+
+  const videoResponse = await uploadOnCloudinary(videoLocalPath);
+  if (!videoResponse?.secure_url) {
     throw new ApiError(400, "Video uploading failed");
+  }
+
+  const thumbnailResponse = await uploadOnCloudinary(thumbnailLocalPath);
+  if (!thumbnailResponse?.secure_url) {
+    throw new ApiError(400, "Thumbnail uploading failed");
   }
 
   const video = await VIDEO.create({
     title,
     description,
-    videoFile: uploadResponse.secure_url,
+    videoFile: videoResponse.secure_url,
+    thumbnail: thumbnailResponse.secure_url,
     owner: req.user._id,
   });
 
@@ -80,7 +90,6 @@ const publishAVideo = asyncHandler(async (req, res) => {
     .json(new ApiResponse(201, video, "Video published successfully"));
 });
 
-
 const getVideoById = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
   //TODO: get video by id
@@ -88,7 +97,52 @@ const getVideoById = asyncHandler(async (req, res) => {
 
 const updateVideo = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
-  //TODO: update video details like title, description, thumbnail
+  const { title, description } = req.body;
+
+  const updatedVideo = await VIDEO.findById(videoId);
+  if (!updatedVideo) {
+    throw new ApiError(404, "Video not found");
+  }
+
+  if (updatedVideo.owner.toString() !== req.user._id.toString()) {
+    throw new ApiError(403, "Not allowed");
+  }
+
+  const updateFields = {};
+  if (title) updateFields.title = title;
+  if (description) updateFields.description = description;
+
+  const updatedVideoPath = req.files?.videoFile?.[0]?.path;
+  if (updatedVideoPath) {
+    const uploadedVideoResponse = await uploadOnCloudinary(updatedVideoPath);
+    if (!uploadedVideoResponse?.secure_url) {
+      throw new ApiError(400, "Video uploading failed");
+    }
+    updateFields.videoFile = uploadedVideoResponse.secure_url;
+  }
+
+  const updatedThumbnailPath = req.files?.thumbnail?.[0]?.path;
+  if (updatedThumbnailPath) {
+    const uploadedThumbnailResponse =
+      await uploadOnCloudinary(updatedThumbnailPath);
+    if (!uploadedThumbnailResponse?.secure_url) {
+      throw new ApiError(400, "Thumbnail uploading failed");
+    }
+    updateFields.thumbnail = uploadedThumbnailResponse.secure_url;
+  }
+
+  if (Object.keys(updateFields).length === 0) {
+    throw new ApiError(400, "Nothing to update");
+  }
+
+  const finalVideo = await VIDEO.findByIdAndUpdate(videoId, updateFields, 
+    {
+    new: true,
+  });
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, finalVideo, "Video updated successfully"));
 });
 
 const deleteVideo = asyncHandler(async (req, res) => {
