@@ -6,7 +6,7 @@ import { ApiResponse } from "../utils/apiResponse.js";
 
 const getVideoComments = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
-
+  
   // const comments = await COMMENT.find({ video: videoId });
   //          OR
   const comments = await COMMENT.aggregate([
