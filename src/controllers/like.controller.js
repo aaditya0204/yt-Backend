@@ -1,5 +1,5 @@
 import mongoose, { isValidObjectId } from "mongoose";
-import { Like } from "../models/like.model.js";
+import { LIKE, Like } from "../models/like.model.js";
 import { ApiError } from "../utils/apiError.js";
 import { ApiResponse } from "../utils/apiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -8,26 +8,27 @@ import { VIDEO } from "../models/video.model.js";
 const toggleVideoLike = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
   const userId = req.user._id;
-
-  if (!isValidObjectId(videoId)) {
-    throw new ApiError(400, "Invalid Video Id");
+  const video = await VIDEO.findById(videoId);
+  if (!video) {
+    throw new ApiError(404, "Video not found");
   }
-  const existedLike = await Like.findOne({
-    targetModel: "VIDEO",
-    target: videoId,
-    owner: userId,
+  const existingLike = await LIKE.findOne({
+    video: videoId,
+    likedby: userId,
   });
-  if (existedLike) {
-    await Like.deleteOne({ _id: existedLike._id });
-    return res.status(200).json(new ApiResponse(200, { liked: false }));
+  if (existingLike) {
+    await LIKE.deleteOne({ _id: existingLike._id });
   } else {
-    await Like.create({
-      targetModel: "VIDEO",
-      target: videoId,
-      owner: req.user._id,
-    });
+    await LIKE.create({ video: videoId, likedby: userId });
   }
-  res.status(200).json(new ApiResponse(200, { liked: true }));
+  res.status(200).json(new ApiResponse(200, " Like Toggled Successfully"))
+
+
+
+
+
+
+
 });
 
 const toggleCommentLike = asyncHandler(async (req, res) => {

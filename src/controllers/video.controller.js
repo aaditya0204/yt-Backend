@@ -93,6 +93,21 @@ const publishAVideo = asyncHandler(async (req, res) => {
 const getVideoById = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
   //TODO: get video by id
+
+  const video = await VIDEO.findById(videoId);
+  if (!video) {
+    throw new ApiError(404, "Video not found");
+  }
+  if (
+    !video.isPublished ||
+    video.owner.toString() !== req.user._id.toString()
+  ) {
+    throw new ApiError(403, "Not allowed to view this video");
+  }
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, video, "Video fetched successfully"));
 });
 
 const updateVideo = asyncHandler(async (req, res) => {
@@ -135,8 +150,7 @@ const updateVideo = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Nothing to update");
   }
 
-  const finalVideo = await VIDEO.findByIdAndUpdate(videoId, updateFields, 
-    {
+  const finalVideo = await VIDEO.findByIdAndUpdate(videoId, updateFields, {
     new: true,
   });
 
@@ -148,10 +162,39 @@ const updateVideo = asyncHandler(async (req, res) => {
 const deleteVideo = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
   //TODO: delete video
+
+  const video = await VIDEO.findById(videoId);
+  if (!video) {
+    throw new ApiError(404, "Video not found");
+  }
+  if (video) {
+    if (video.owner.toString() !== req.user._id.toString()) {
+      throw new ApiError(403, "Not allowed");
+    }
+  }
+  await VIDEO.findByIdAndDelete(videoId);
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, null, "Video deleted successfully"));
 });
 
 const togglePublishStatus = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
+  const video = await VIDEO.findById(videoId);
+  if (!video) {
+    throw new ApiError(404, "Video not found");
+  }
+  if (video.owner.toString() !== req.user._id.toString()) {
+    throw new ApiError(403, "Not allowed");
+  }
+  video.isPublished = !video.isPublished;
+  await video.save();
+  res
+    .status(200)
+    .json(
+      new ApiResponse(200, video, "Video publish status toggled successfully")
+    );
 });
 
 export {
