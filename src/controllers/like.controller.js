@@ -21,19 +21,23 @@ const toggleVideoLike = asyncHandler(async (req, res) => {
   } else {
     await LIKE.create({ video: videoId, likedby: userId });
   }
-  res.status(200).json(new ApiResponse(200, " Like Toggled Successfully"))
-
-
-
-
-
-
-
+  res.status(200).json(new ApiResponse(200, " Like Toggled Successfully"));
 });
 
 const toggleCommentLike = asyncHandler(async (req, res) => {
   const { commentId } = req.params;
+  const { userId } = req.user._id;
   //TODO: toggle like on comment
+  const existingLike = LIKE.findOne({
+    comment: commentId,
+    likedby: userId,
+  });
+  if (existingLike) {
+    await LIKE.findOneAndDelete({
+      comment: commentId,
+      likedby: userId,
+    });
+  }
 });
 
 const toggleTweetLike = asyncHandler(async (req, res) => {
