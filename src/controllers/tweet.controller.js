@@ -20,6 +20,7 @@ const createTweet = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, tweet, "Tweet Created Successfully"));
 });
 
+
 const getUserTweets = asyncHandler(async (req, res) => {
   // TODO: get user tweets
 });
