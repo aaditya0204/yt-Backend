@@ -20,13 +20,28 @@ const createTweet = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, tweet, "Tweet Created Successfully"));
 });
 
-
 const getUserTweets = asyncHandler(async (req, res) => {
   // TODO: get user tweets
 });
 
 const updateTweet = asyncHandler(async (req, res) => {
   //TODO: update tweet
+  const { content } = req.body;
+  const { tweetId } = req.params;
+  if (!content) {
+    throw new ApiError(400, "Please provide content to update tweet");
+  }
+  const tweet = await TWEET.findByIdAndUpdate(
+    tweetId,
+    { content },
+    { new: true }
+  );
+  if (!tweet) {
+    throw new ApiError(404, "Tweet not found");
+  }
+  res
+    .status(200)
+    .json(new ApiResponse(200, tweet, "Tweet Updated Successfully"));
 });
 
 const deleteTweet = asyncHandler(async (req, res) => {
