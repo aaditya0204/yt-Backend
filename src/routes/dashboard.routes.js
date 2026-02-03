@@ -1,5 +1,6 @@
 import express from "express";
 import { Router } from "express";
+import { verifyJWT } from "../middlewares/auth.js";
 
 import {
   getChannelStats,
@@ -8,5 +9,5 @@ import {
 
 const router = Router();
 router.route("/stats").get(verifyJWT, getChannelStats);
-router.route("/videos".get(verifyJWT, getChannelVideos));
+router.route("/videos").get(verifyJWT, getChannelVideos);
 export default router;

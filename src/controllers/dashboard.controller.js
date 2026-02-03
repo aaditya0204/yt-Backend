@@ -1,9 +1,10 @@
 import mongoose from "mongoose";
-import { VIDEO, Video } from "../models/video.model.js";
-import { Subscription } from "../models/subscription.model.js";
-import { LIKE, Like } from "../models/like.model.js";
+import { VIDEO } from "../models/video.model.js";
+import { SUBSCRIPTION } from "../models/subscription.model.js";
+import { LIKE } from "../models/like.model.js";
 import { ApiError } from "../utils/apiError.js";
-import { ApiResponse } from "../utils/apiError.js";
+import { ApiResponse } from "../utils/apiResponse.js";
+import { verifyJWT } from "../middlewares/auth.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 const getChannelStats = asyncHandler(async (req, res) => {

@@ -3,6 +3,7 @@ import COMMENT from "../models/comment.model.js";
 import { ApiError } from "../utils/apiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/apiResponse.js";
+import { verifyJWT } from "../middlewares/auth.js";
 
 const getVideoComments = asyncHandler(async (req, res) => {
   const { videoId } = req.params;

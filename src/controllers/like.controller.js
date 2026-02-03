@@ -4,6 +4,7 @@ import { ApiError } from "../utils/apiError.js";
 import { ApiResponse } from "../utils/apiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { VIDEO } from "../models/video.model.js";
+import { verifyJWT } from "../middlewares/auth.js";
 
 const toggleVideoLike = asyncHandler(async (req, res) => {
   const { videoId } = req.params;

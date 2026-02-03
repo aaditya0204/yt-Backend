@@ -20,7 +20,8 @@ connectDB()
   })
   .catch((err) => {
     console.log(" DataBase Connection Failed!! ", err);
-  });
+  }); 
+
   
 /*   
 
