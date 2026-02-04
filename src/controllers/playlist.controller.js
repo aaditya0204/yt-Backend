@@ -69,17 +69,66 @@ const addVideoToPlaylist = asyncHandler(async (req, res) => {
 const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
   const { playlistId, videoId } = req.params;
   // TODO: remove video from playlist
+  if (!isValidObjectId(playlistId) || !isValidObjectId(videoId)) {
+    throw new ApiError(400, "Invalid playlist ID OR Video Id");
+  }
+  const video = await VIDEO.findById(videoId);
+  if (!video) {
+    throw new ApiError(404, "Video not found");
+  }
+  const playlist = await PLAYLIST.findById(playlistId);
+  if (!playlist) {
+    throw new ApiError(404, "Playlist not found");
+  }
+  await PLAYLIST.findByIdAndUpdate(playlistId, {
+    $pull: { videos: videoId },
+  });
+  res
+    .status(200)
+    .json(
+      new ApiResponse(200, null, "Video removed from playlist successfully")
+    );
 });
 
 const deletePlaylist = asyncHandler(async (req, res) => {
   const { playlistId } = req.params;
   // TODO: delete playlist
+
+  if (!isValidObjectId(playlistId)) {
+    throw new ApiError(400, "Invalid playlist ID");
+  }
+  const playlist = await PLAYLIST.findOneAndDelete({
+    _id: playlistId,
+    owner: req.user._id,
+  });
+
+  if (!playlist) {
+    throw new ApiError(404, "Playlist not found or unauthorized");
+  }
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, null, "Playlist deleted successfully"));
 });
 
 const updatePlaylist = asyncHandler(async (req, res) => {
   const { playlistId } = req.params;
   const { name, description } = req.body;
   //TODO: update playlist
+  if (!isValidObjectId(playlistId)) {
+    throw new ApiError(400, "Invalid playlist ID");
+  }
+  const playlist = await PLAYLIST.findOneAndUpdate(
+    { _id: playlistId, owner: req.user._id },
+    { $set: { name, description } },
+    { new: true }
+  );
+  if (!playlist) {
+    throw new ApiError(404, "Playlist not found or unauthorized");
+  }
+  res
+    .status(200)
+    .json(new ApiResponse(200, playlist, "Playlist updated successfully"));
 });
 
 export {
